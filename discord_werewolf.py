@@ -4,8 +4,6 @@ import asyncio
 
 client = discord.Client()
 
-
-
 # ユーザー"to"にメッセージ内容"S"のメッセージを送信する
 async def DirectMessage(to, S):
 	print('Send Message to {0.display_name}'.format(to))
@@ -13,8 +11,6 @@ async def DirectMessage(to, S):
 
 # ゲーム管理側がリアクションを求めているか確認
 def check_reaction(react_char, user):
-
-
 
 # 起動時のログ出力
 @client.event
