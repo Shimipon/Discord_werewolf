@@ -6,6 +6,8 @@ class Role:
 		self.human = True
 		# 日本語名
 		self.name = "役職"
+	def night_message(self):
+		return None
 		
 class Villager(Role):
 	def __init__(self):
@@ -24,6 +26,8 @@ class Werewolf(Role):
 		self.human = False
 		# 日本語名
 		self.name = "人狼"
+	def night_message(self):
+		return "殺害対象を選択してください。"
 		
 class FortuneTeller(Role):
 	def __init__(self):
@@ -33,6 +37,8 @@ class FortuneTeller(Role):
 		self.human = True
 		# 日本語名
 		self.name = "占い師"
+	def night_message(self):
+		return "占い対象を選択してください。"
 
 class Medium(Role):
 	def __init__(self):
@@ -60,4 +66,5 @@ class Knight(Role):
 		self.human = True
 		# 日本語名
 		self.name = "騎士"
-				
+	def night_message(self):
+		return "護衛対象を選択してください。"

@@ -1,4 +1,5 @@
 import Role
+import random
 # from Role import Villager #0
 # from Role import Werewolf #1
 # from Role import FortuneTeller #2
@@ -9,23 +10,30 @@ import Role
 class Player:
 	def __init__(self):
 		self.Life = True
-		self.KillTarget = False
 		self.FortuneTarget = False
 		self.Voted = False
 		self.Guard = False
+	def reset(self):
+		self.FortuneTarget = False
+		self.Voted = False
+		self.Guard = False
+		self.Voted = False
+
 
 class WerewolfMG:
 	def __init__(self):
 		# プレイヤーのリストで，IDとプレイヤー情報，
-		self.playerList = []
+		self.playerList = {}
 		self.IDList = []
 		self.WolfIDList = []
 		self.HumanIDList = []
 		self.livingIDList = []
 		self.livingHumanIDList = []
 		self.voteList = []
+		self.nightID = []
 		self.voteNumList = []
 		self.maxVotePlayers = []
+		self.killTarget = []
 		self.day = 0
 
 	def Make_PlayerList(self, memberList, roleList):
@@ -55,7 +63,7 @@ class WerewolfMG:
 			else:
 				self.WolfIDList.append(mem)
 			player = Player()
-			self.playerList.append((mem, role, player))
+			self.playerList[mem] = [role, player]
 		return "プレイヤーのリストを生成しました"
 
 	def Reset_Game(self):
@@ -65,28 +73,63 @@ class WerewolfMG:
 		self.HumanIDList.clear()
 		self.livingIDList.clear()
 		self.day = 0
-		return "プレイヤーリストをリセットしました"
+		return "ゲーム設定をリセットしました"
+
+	def Kill(self, player):
+		self.playerList[player][1].Life = False
+		if player in self.livingIDList:
+			self.livingIDList.remove(player)
+		if player in self.livingHumanIDList:
+			self.livingHumanIDList.remove(player)
+		return
+
 
 	def night_List(self):
+		self.nightID.clear()
 		nightList = []
-		for plr in self.playerList:
-			if plr[1].name == "占い師":
-				message = "占い対象を選択してください。"
-				subList = self.livingIDList[:self.livingIDList.index(plr[0])] + self.livingIDList[self.livingIDList.index(plr[0])+1:] 
-				nightList.append((plr[0],message,subList))
-			elif plr[1].name == "騎士":
-				message = "護衛対象を選択してください"
-				subList = self.livingIDList[:self.livingIDList.index(plr[0])] + self.livingIDList[self.livingIDList.index(plr[0])+1:] 
-				nightList.append((plr[0],message,subList))
-			elif plr[1].name == "人狼":
-				message = "殺害する対象を選択してください。"
-				subList = self.livingHumanIDList 
-				nightList.append((plr[0],message,subList))
+		for plr in self.livingIDList:
+			message = self.playerList[plr][0].night_message()
+			if message is not None:
+				self.nightID.append(plr)
+				if self.playerList[plr][0].name == "人狼":
+					subList = self.livingHumanIDList 
+					nightList.append((plr,message,subList))
+				else:
+					subList = self.livingIDList[:self.livingIDList.index(plr)] + self.livingIDList[self.livingIDList.index(plr)+1:] 
+					nightList.append((plr,message,subList))	
 		return nightList
 	
-	#def night_Action(self, player, target):
-	#	for plr in self.playerList:
+	def night_Action(self, player, target):
+		if not player in self.nightID:
+			return None
+		self.nightID.remove(player)
+		RN = self.playerList[player][0].name
+		if RN == "占い師":
+			self.playerList[player][1].FortuneTarget = True
+			if self.playerList[target][0].human:
+				return "さんを占った結果は人間でした！"
+			else:
+				return "さんを占った結果は人狼でした！"
+		elif RN == "騎士":
+			self.playerList[target][1].Guard = True
+			return "さんを護衛します！"
+		elif RN == "人狼":
+			self.killTarget.append(target)
+			return "さんを殺害対象に選択しました。"
 
+	def welcome_Morning(self):
+		death = []
+		if len(self.killTarget) > 1:
+			t = random.choice(self.killTarget)
+			self.killTarget = [t]
+		tgt = self.killTarget[0]
+		if not self.playerList[tgt][1].Guard:
+			death.append(tgt)
+			self.Kill(tgt)
+		for plr in self.livingIDList:
+			self.playerList[plr][1].reset()
+		self.killTarget.clear()
+		return death
 
 	def make_Vote(self):
 		voteMessageList = []
@@ -116,9 +159,3 @@ class WerewolfMG:
 			elif pln[1] == maxVNum:
 				self.maxVotePlayers.append(pln[0])
 		return ("投票が完了しました。", self.maxVotePlayers)
-
-
-
-
-
-
