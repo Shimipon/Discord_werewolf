@@ -23,3 +23,5 @@ async def on_reaction_add(reaction, user)
         return
     check_reaction(reaction.emoji, user)
     return
+
+client.run(open("token.txt", "r").read())
