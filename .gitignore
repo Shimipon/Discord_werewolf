@@ -130,3 +130,6 @@ dmypy.json
 
 # private information
 token.txt
+gameVoiceChannel.txt
+deadVoiceChannel.txt
+ServerConfig.json

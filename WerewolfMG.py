@@ -10,20 +10,20 @@ class Player:
 		self.FortuneTarget = False
 		# 前日に投票で殺されたか否か．
 		self.Voted = False
-		# 騎士の護衛対象になっている，若しくは人狼に殺されなくなっているか否か．
-		self.Guard = False
 		# プレイヤーの役職，指定された役職が無ければ村人にする．
 		if role is None:
 			self.Role = Role.Villager()
 		else:
 			self.Role = role
-
+		# 騎士の護衛対象になっている，若しくは人狼に殺されなくなっているか否か．
+		self.Guard = role.StartGuard()
 	# 生存情報以外の情報をリセットする．
 	def reset(self):
 		self.FortuneTarget = False
-		self.Guard = False
+		self.Guard = self.role.StartGuard()
 		self.Voted = False
 
+# ゲームのマネジメント管理をするクラス，discordとのやりとりはせずに必要な情報をとってくる．
 class WerewolfMG:
 	def __init__(self):
 		# プレイヤーの辞書で，IDをキーとしている．役職，プレイヤーステータスの保存を行う．
@@ -169,6 +169,7 @@ class WerewolfMG:
 		self.killTarget.clear()
 		return death
 
+	# 投票する人と，投票対象のリストを生成返す．
 	def make_Vote(self):
 		voteMessageList = []
 		for plr in self.livingIDList:
@@ -178,6 +179,7 @@ class WerewolfMG:
 			self.voteNumList[plr] = 0
 		return voteMessageList
 
+	# 投票する．
 	def Voting(self, player, voted):
 		for pln in self.voteNumList:
 			if pln == voted:
@@ -185,6 +187,7 @@ class WerewolfMG:
 				self.voteList.append((player, voted))
 				return
 
+	# 投票結果を返す，最多得票
 	def vote_Result(self):
 		if len(self.voteList) != len(self.livingIDList):
 			return ("投票が完了していません。", [])
