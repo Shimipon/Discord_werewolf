@@ -1,9 +1,10 @@
 import Role
 import random
+import emoji_code
 
 # プレイヤーの情報
 class Player:
-	def __init__(self, role = None):
+	def __init__(self, voteID, role = None):
 		# 生存しているか否か．
 		self.Life = True
 		# 占いの対象になっているか否か．
@@ -17,6 +18,8 @@ class Player:
 			self.Role = role
 		# 騎士の護衛対象になっている，若しくは人狼に殺されなくなっているか否か．
 		self.Guard = role.StartGuard()
+		# 投票に使うアルファベット．
+		self.VoteID = voteID
 	# 生存情報以外の情報をリセットする．
 	def reset(self):
 		self.FortuneTarget = False
@@ -51,26 +54,19 @@ class WerewolfMG:
 		# 現在の日数
 		self.day = 1
 
+	# 人数に応じて役職番号のリストを作って返す
+	def Make_RoleList(self, num):
+
 	# プレイヤーのリストを作成する．
 	def Make_PlayerList(self, memberList, roleList):
 		if len(memberList) != len(roleList):
 			return "役職リストのバグが発生中"
-		for mem, rnum in zip(memberList, roleList):
+		cList = emoji_code.get_List(len(memberList))
+		for mem, voteID, rnum in zip(memberList, cList, roleList):
 			self.IDList.append(mem)
 			self.livingIDList.append(mem)
 			# 役職ナンバーに応じた役職を付与
-			if rnum == 1:
-				r = Role.Werewolf()
-			elif rnum == 2:
-				r = Role.FortuneTeller()
-			elif rnum == 3:
-				r = Role.Medium()
-			elif rnum == 4:
-				r = Role.Knight()
-			elif rnum == 5:
-				r = Role.Madmate()
-			else:
-				r = Role.Villager()
+			r = Role.make_Role(rnum)
 			# 人間の場合は人間のIDリストに追加
 			if r.human:
 				self.HumanIDList.append(mem)
@@ -78,7 +74,8 @@ class WerewolfMG:
 			# そうでない場合は狼のIDリストに追加
 			else:
 				self.WolfIDList.append(mem)
-			player = Player(r)
+			vc = emoji_code.get_Code(voteID)
+			player = Player(vc, r)
 			self.playerList[mem] = player
 		return "プレイヤーのリストを生成しました"
 
@@ -111,6 +108,7 @@ class WerewolfMG:
 	def night_List(self):
 		# 前の履歴が残っていたら，削除する．
 		self.nightActionID.clear()
+		self.maxVotePlayers.clear()
 		# 返り値とするリスト．夜の行動があるプレイヤーの「ID」と，
 		# そのプレイヤーに送信する「メッセージ」，その行動の対象となるプレイヤーの「IDのリスト」．
 		nightList = []
@@ -140,7 +138,7 @@ class WerewolfMG:
 			else:
 				return "さんを占った結果は人狼でした！"
 		elif RN == "騎士":
-			self.playerList[target]Guard = True
+			self.playerList[target].Guard = True
 			return "さんを護衛します！"
 		elif RN == "人狼":
 			self.killTarget.append(target)
@@ -187,7 +185,7 @@ class WerewolfMG:
 				self.voteList.append((player, voted))
 				return
 
-	# 投票結果を返す，最多得票
+	# 投票結果を返す，最多得票を得たプレイヤーのリストを返す．
 	def vote_Result(self):
 		if len(self.voteList) != len(self.livingIDList):
 			return ("投票が完了していません。", [])
