@@ -1,4 +1,5 @@
 import Role
+import json
 import random
 import emoji_code
 
@@ -54,8 +55,17 @@ class WerewolfMG:
 		# 現在の日数
 		self.day = 1
 
-	# 人数に応じて役職番号のリストを作って返す
+	# 人数に応じて役職番号のリストを作ってランダムに並べ変えて返す
 	def Make_RoleList(self, num):
+		GameConfigJson = open("GameConfig.json", "r")
+		GameConfig = json.load(GameConfigJson)
+		pnum = str(num)
+		rList = []
+		for r,n in GameConfig[pnum].items():
+			for i in range(n):
+				rList.append(GameConfig["RoleNumber"][r])
+		random.shuffle(rList)
+		return rList
 
 	# プレイヤーのリストを作成する．
 	def Make_PlayerList(self, memberList, roleList):

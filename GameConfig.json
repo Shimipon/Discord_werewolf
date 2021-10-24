@@ -1,0 +1,44 @@
+{
+	"RoleNumber":{
+		"Villager":0,
+		"Werewolf":1,
+		"FortuneTeller":2,
+		"Medium":3,
+		"Knight":4,
+		"Madmate":5,
+		"Fox":6,
+		"Bakery":7
+	},
+	"8":{
+		"Villager": 3,
+		"Werewolf": 2,
+		"FortuneTeller": 1,
+		"Medium": 1,
+		"Knight": 1
+	},
+	"9":{
+		"Villager": 3,
+		"Werewolf": 2,
+		"FortuneTeller": 1,
+		"Medium": 1,
+		"Knight": 1,
+		"Madmate": 1
+	},
+	"10":{
+		"Villager": 4,
+		"Werewolf": 2,
+		"FortuneTeller": 1,
+		"Medium": 1,
+		"Knight": 1,
+		"Madmate": 1
+	},
+	"11":{
+		"Villager": 4,
+		"Werewolf": 2,
+		"FortuneTeller": 1,
+		"Medium": 1,
+		"Knight": 1,
+		"Madmate": 1,
+		"Fox": 1
+	}
+}

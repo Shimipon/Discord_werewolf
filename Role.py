@@ -57,16 +57,7 @@ class Medium(Role):
 		# 人間
 		self.human = True
 		# 日本語名
-		self.name = "霊媒師"
-				
-class Madmate(Role):
-	def __init__(self):
-		# 人狼陣営
-		self.team = "werewolf"
-		# 人間
-		self.human = True
-		# 日本語名
-		self.name = "狂人"
+		self.name = "霊媒師"			
 			
 class Knight(Role):
 	def __init__(self):
@@ -80,6 +71,16 @@ class Knight(Role):
 	# 護衛対象を選択する．
 	def night_message(self):
 		return "護衛対象を選択してください。"
+
+class Madmate(Role):
+	def __init__(self):
+		# 人狼陣営
+		self.team = "werewolf"
+		# 人間
+		self.human = True
+		# 日本語名
+		self.name = "狂人"
+
 
 class Fox(Role):
 	def __init__(self):
@@ -109,7 +110,7 @@ class Bakery(Role):
 #  3.霊媒師
 #  4.騎士
 #  5.狂人
-#  6.狐
+#  6.妖狐
 #  7.パン屋
 
 def make_Role(num):
@@ -131,3 +132,5 @@ def make_Role(num):
 		r = Villager()
 	return r
 
+# def make_RoleNumList(num):
+# 	if 
