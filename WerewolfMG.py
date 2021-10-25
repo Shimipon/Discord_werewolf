@@ -55,6 +55,23 @@ class WerewolfMG:
 		# 現在の日数
 		self.day = 1
 
+
+	# ゲームの情報をリセット．
+	def Reset_Game(self):
+		self.playerList.clear()
+		self.IDList.clear()
+		self.WolfIDList.clear()
+		self.HumanIDList.clear()
+		self.livingIDList.clear()
+		self.livingHumanIDList.clear()
+		self.voteList.clear()
+		self.nightActionID.clear()
+		self.voteNumList.clear()
+		self.maxVotePlayers.clear()
+		self.killTarget.clear()
+		self.day = 0
+		return "ゲーム設定をリセットしました"
+
 	# 人数に応じて役職番号のリストを作ってランダムに並べ変えて返す
 	def Make_RoleList(self, num):
 		GameConfigJson = open("GameConfig.json", "r")
@@ -89,22 +106,6 @@ class WerewolfMG:
 			self.playerList[mem] = player
 		return "プレイヤーのリストを生成しました"
 
-	# ゲームの情報をリセット．
-	def Reset_Game(self):
-		self.playerList.clear()
-		self.IDList.clear()
-		self.WolfIDList.clear()
-		self.HumanIDList.clear()
-		self.livingIDList.clear()
-		self.livingHumanIDList.clear()
-		self.voteList.clear()
-		self.nightActionID.clear()
-		self.voteNumList.clear()
-		self.maxVotePlayers.clear()
-		self.killTarget.clear()
-		self.day = 0
-		return "ゲーム設定をリセットしました"
-
 	# 対象のプレイヤーを死亡させる関数．
 	def Kill(self, player):
 		self.playerList[player].Life = False
@@ -112,7 +113,33 @@ class WerewolfMG:
 			self.livingIDList.remove(player)
 		if player in self.livingHumanIDList:
 			self.livingHumanIDList.remove(player)
-		return
+		return 
+
+	# 現在の生存情報からゲームが終了するかを判定する．
+	def Check_End(self):
+		wolfnum = 0
+		for w in self.WolfIDList:
+			if self.playerList[w].Life:
+				wolfnum += 1
+		if wolfnum == 0:
+			if self.Check_Fox():
+				return "fox"
+			else:
+				return "village"
+		elif len(self.livingIDList) > wolfnum:
+			return None
+		else:
+			if self.Check_Fox():
+				return "fox"
+			else:
+				return "werewolf"
+
+	# 現在生存している中に狐がいるかを確認する．
+	def Check_Fox(self):
+		for m in self.livingIDList:
+			if self.playerList[m].Role.team == "fox":
+				return True
+		return False
 
 	# 夜の行動リストを作成する．
 	def night_List(self):
@@ -131,7 +158,8 @@ class WerewolfMG:
 					subList = self.livingHumanIDList 
 					nightList.append((plr,message,subList))
 				else:
-					subList = self.livingIDList[:self.livingIDList.index(plr)] + self.livingIDList[self.livingIDList.index(plr)+1:] 
+					pindex = self.livingIDList.index(plr)
+					subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:] 
 					nightList.append((plr,message,subList))	
 		return nightList
 	
@@ -182,7 +210,8 @@ class WerewolfMG:
 		voteMessageList = []
 		for plr in self.livingIDList:
 			message = "投票対象を選択してください。"
-			subList = self.livingIDList[:self.livingIDList.index(plr)] + self.livingIDList[self.livingIDList.index(plr)+1:]
+			pindex = self.livingIDList.index(plr)
+			subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:]
 			voteMessageList.append((plr,message,subList))
 			self.voteNumList[plr] = 0
 		return voteMessageList

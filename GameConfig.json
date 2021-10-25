@@ -9,6 +9,7 @@
 		"Fox":6,
 		"Bakery":7
 	},
+
 	"8":{
 		"Villager": 3,
 		"Werewolf": 2,
@@ -16,6 +17,7 @@
 		"Medium": 1,
 		"Knight": 1
 	},
+
 	"9":{
 		"Villager": 3,
 		"Werewolf": 2,
@@ -24,6 +26,7 @@
 		"Knight": 1,
 		"Madmate": 1
 	},
+
 	"10":{
 		"Villager": 4,
 		"Werewolf": 2,
@@ -32,6 +35,7 @@
 		"Knight": 1,
 		"Madmate": 1
 	},
+	
 	"11":{
 		"Villager": 4,
 		"Werewolf": 2,
