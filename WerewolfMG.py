@@ -40,8 +40,6 @@ class WerewolfMG:
 		self.HumanIDList = []
 		# 生存しているプレイヤーのIDリスト．
 		self.livingIDList = []
-		# 生存している人間のプレイヤーのリスト．
-		self.livingHumanIDList = []
 		# 現在行われた投票のリスト．「誰が」「誰に」投票したかを保存する．
 		self.voteList = []
 		# 現在行われた投票の票数の辞書．「誰に」「何票入っている」かを保存する．
@@ -63,7 +61,6 @@ class WerewolfMG:
 		self.WolfIDList.clear()
 		self.HumanIDList.clear()
 		self.livingIDList.clear()
-		self.livingHumanIDList.clear()
 		self.voteList.clear()
 		self.nightActionID.clear()
 		self.voteNumList.clear()
@@ -84,6 +81,13 @@ class WerewolfMG:
 		random.shuffle(rList)
 		return rList
 
+	# 全員の役職のリストを返す．
+	def get_PlayerList(self):
+		plist = []
+		for m in playerList.keys():
+			plist.append(m,playerList[m].Role.name)
+		return m
+
 	# プレイヤーのリストを作成する．
 	def Make_PlayerList(self, memberList, roleList):
 		if len(memberList) != len(roleList):
@@ -97,7 +101,6 @@ class WerewolfMG:
 			# 人間の場合は人間のIDリストに追加
 			if r.human:
 				self.HumanIDList.append(mem)
-				self.livingHumanIDList.append(mem)
 			# そうでない場合は狼のIDリストに追加
 			else:
 				self.WolfIDList.append(mem)
@@ -111,8 +114,6 @@ class WerewolfMG:
 		self.playerList[player].Life = False
 		if player in self.livingIDList:
 			self.livingIDList.remove(player)
-		if player in self.livingHumanIDList:
-			self.livingHumanIDList.remove(player)
 		return 
 
 	# 現在の生存情報からゲームが終了するかを判定する．
@@ -126,7 +127,7 @@ class WerewolfMG:
 				return "fox"
 			else:
 				return "village"
-		elif len(self.livingIDList) > wolfnum:
+		elif len(self.livingIDList) > wolfnum * 2:
 			return None
 		else:
 			if self.Check_Fox():
@@ -154,13 +155,9 @@ class WerewolfMG:
 			message = self.playerList[plr].Role.night_message()
 			if message is not None:
 				self.nightActionID.append(plr)
-				if self.playerList[plr].Role.name == "人狼":
-					subList = self.livingHumanIDList 
-					nightList.append((plr,message,subList))
-				else:
-					pindex = self.livingIDList.index(plr)
-					subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:] 
-					nightList.append((plr,message,subList))	
+				pindex = self.livingIDList.index(plr)
+				subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:] 
+				nightList.append((plr,message,subList))	
 		return nightList
 	
 	# playerの夜の行動をtargetを対象として行う．
@@ -205,7 +202,7 @@ class WerewolfMG:
 		self.killTarget.clear()
 		return death
 
-	# 投票する人と，投票対象のリストを生成返す．
+	# 投票する人と，投票対象のリストを生成して返す．
 	def make_Vote(self):
 		voteMessageList = []
 		for plr in self.livingIDList:
@@ -215,6 +212,15 @@ class WerewolfMG:
 			voteMessageList.append((plr,message,subList))
 			self.voteNumList[plr] = 0
 		return voteMessageList
+
+	# 決戦投票用の関数．投票する人と，投票対象のリストを生成して返す．
+	def make_FinishVote(self, vlist):
+		voteMessageList = []
+		for plr in self.livingIDList:
+			if not plr in vlist:
+				message = "投票対象を選択してください。"
+				voteMessageList.append((plr,message,vlist))
+		return
 
 	# 投票する．
 	def Voting(self, player, voted):
@@ -239,3 +245,4 @@ class WerewolfMG:
 		self.voteNumList.clear()
 		self.voteList.clear()
 		return ("投票が完了しました。", self.maxVotePlayers)
+
