@@ -206,21 +206,19 @@ class WerewolfMG:
 	def make_Vote(self):
 		voteMessageList = []
 		for plr in self.livingIDList:
-			message = "投票対象を選択してください。"
 			pindex = self.livingIDList.index(plr)
 			subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:]
-			voteMessageList.append((plr,message,subList))
+			voteMessageList.append((plr,subList))
 			self.voteNumList[plr] = 0
 		return voteMessageList
 
 	# 決戦投票用の関数．投票する人と，投票対象のリストを生成して返す．
-	def make_FinishVote(self, vlist):
+	def make_FinishVote(self, sublist):
 		voteMessageList = []
 		for plr in self.livingIDList:
-			if not plr in vlist:
-				message = "投票対象を選択してください。"
-				voteMessageList.append((plr,message,vlist))
-		return
+			if not plr in sublist:
+				voteMessageList.append((plr,sublist))
+		return voteMessageList
 
 	# 投票する．
 	def Voting(self, player, voted):
@@ -245,4 +243,3 @@ class WerewolfMG:
 		self.voteNumList.clear()
 		self.voteList.clear()
 		return ("投票が完了しました。", self.maxVotePlayers)
-
