@@ -1,7 +1,7 @@
 import Role
 import json
 import random
-import emoji_code
+import emoji_code as ec
 
 # プレイヤーの情報
 class Player:
@@ -31,41 +31,55 @@ class Player:
 class WerewolfMG:
 	def __init__(self):
 		# プレイヤーの辞書で，IDをキーとしている．役職，プレイヤーステータスの保存を行う．
-		self.playerList = {}
-		# 参加しているプレイヤーのIDリスト．
+		self.playerDict = {}
+
+		# 参加しているプレイヤーのIDリスト．これを元に役職を配布したりする．
 		self.IDList = []
+
 		# 人狼のプレイヤーのIDリスト．
 		self.WolfIDList = []
+
 		# 人間のプレイヤーのIDリスト．
 		self.HumanIDList = []
+
 		# 生存しているプレイヤーのIDリスト．
 		self.livingIDList = []
-		# 現在行われた投票のリスト．「誰が」「誰に」投票したかを保存する．
-		self.voteList = []
-		# 現在行われた投票の票数の辞書．「誰に」「何票入っている」かを保存する．
-		self.voteNumList = {}
-		# 得票が最も多かったプレイヤーのリスト．決戦投票の際に使う．
-		self.maxVotePlayers = []
-		# 夜の行動が残っている人のIDリスト．
-		self.nightActionID = []
-		# 殺害対象に選ばれた人のIDリスト．複数いる場合はランダムに一人が殺害される．
-		self.killTarget = []
-		# 現在の日数
-		self.day = 1
 
+		# 現在行われた投票のリスト．「誰が」「誰に」投票したかを保存する．
+		self.votedList = []
+
+		# これから行われる投票のリスト．
+		self.voteList = []
+
+		# 現在行われた投票の票数の辞書．「誰に」「何票入っている」かを保存する．
+		self.voteNumDict = {}
+
+		# 夜の行動が残っている人のIDリスト．
+		self.nightActionIDList = []
+
+		# 殺害対象に選ばれた人のIDリスト．複数いる場合はランダムに一人が殺害される．
+		self.killTargetList = []
+
+		# 現在の日数
+		self.day = 0
+
+		# ゲームの現在のフェイズを表す．
+		# 0はゲーム開始前
+		# 1は夜のアクションを行うフェイズ
+		# 2は議論を行うフェイズ
+		# 3は投票を行うフェイズ
+		self.phase = 0
 
 	# ゲームの情報をリセット．
 	def Reset_Game(self):
-		self.playerList.clear()
-		self.IDList.clear()
+		self.playerDict.clear()
 		self.WolfIDList.clear()
 		self.HumanIDList.clear()
 		self.livingIDList.clear()
-		self.voteList.clear()
-		self.nightActionID.clear()
-		self.voteNumList.clear()
-		self.maxVotePlayers.clear()
-		self.killTarget.clear()
+		self.votedList.clear()
+		self.nightActionIDList.clear()
+		self.voteNumDict.clear()
+		self.killTargetList.clear()
 		self.day = 0
 		return "ゲーム設定をリセットしました"
 
@@ -81,20 +95,35 @@ class WerewolfMG:
 		random.shuffle(rList)
 		return rList
 
-	# 全員の役職のリストを返す．
-	def get_PlayerList(self):
-		plist = []
-		for m in playerList.keys():
-			plist.append(m,playerList[m].Role.name)
-		return m
+	# 参加者をまとめて追加するためのメソッド．変更後の参加者リストを返す．
+	def Append_IDList(self, mlist):
+		for m in mlist:
+			if m not in self.IDList:
+				self.IDList.append(m)
+		return(self.IDList)
 
-	# プレイヤーのリストを作成する．
-	def Make_PlayerList(self, memberList, roleList):
-		if len(memberList) != len(roleList):
+	# 参加者をまとめて削除するためのメソッド．変更後の参加者リストを返す．
+	def Remove_IDList(self, mlist):
+		for m in mlist:
+			if m in self.IDList:
+				self.IDList.remove(m)
+		return(self.IDList)
+
+
+	# 参加者を与えられたリストのメンバーに変更するメソッド．変更後の参加者リストを返す．
+	def Set_IDList(self, mlist):
+		self.IDList.clear()
+		for m in mlist:
+			self.IDList.append(m)
+		return(self.IDList)
+
+	# プレイヤーの辞書を作成する．
+	def Make_PlayerDict(self, roleList):
+		self.Reset_Game()
+		if len(self.IDList) != len(roleList):
 			return "役職リストのバグが発生中"
-		cList = emoji_code.get_List(len(memberList))
-		for mem, voteID, rnum in zip(memberList, cList, roleList):
-			self.IDList.append(mem)
+		cList = ec.get_List(len(self.IDList))
+		for mem, voteID, rnum in zip(self.IDList, cList, roleList):
 			self.livingIDList.append(mem)
 			# 役職ナンバーに応じた役職を付与
 			r = Role.make_Role(rnum)
@@ -104,14 +133,28 @@ class WerewolfMG:
 			# そうでない場合は狼のIDリストに追加
 			else:
 				self.WolfIDList.append(mem)
-			vc = emoji_code.get_Code(voteID)
+			vc = ec.get_Code(voteID)
 			player = Player(vc, r)
-			self.playerList[mem] = player
+			self.playerDict[mem] = player
 		return "プレイヤーのリストを生成しました"
+
+	# 全員の役職のリストを返す．
+	def get_PlayerList(self):
+		plist = []
+		for m in self.playerDict.keys():
+			plist.append([m,self.playerDict[m].Role.name])
+		return plist
+
+	# voteID(絵文字)からplayerのdiscordのIDをとってくる
+	def get_PlayerID(self, vid):
+		for p in self.playerDict.keys():
+			if self.playerDict[p].VoteID == vid:
+				return p
+		return None
 
 	# 対象のプレイヤーを死亡させる関数．
 	def Kill(self, player):
-		self.playerList[player].Life = False
+		self.playerDict[player].Life = False
 		if player in self.livingIDList:
 			self.livingIDList.remove(player)
 		return 
@@ -120,7 +163,7 @@ class WerewolfMG:
 	def Check_End(self):
 		wolfnum = 0
 		for w in self.WolfIDList:
-			if self.playerList[w].Life:
+			if self.playerDict[w].Life:
 				wolfnum += 1
 		if wolfnum == 0:
 			if self.Check_Fox():
@@ -138,108 +181,167 @@ class WerewolfMG:
 	# 現在生存している中に狐がいるかを確認する．
 	def Check_Fox(self):
 		for m in self.livingIDList:
-			if self.playerList[m].Role.team == "fox":
+			if self.playerDict[m].Role.team == "fox":
 				return True
 		return False
 
 	# 夜の行動リストを作成する．
-	def night_List(self):
+	def make_NightList(self):
+		self.phase = 1
 		# 前の履歴が残っていたら，削除する．
-		self.nightActionID.clear()
-		self.maxVotePlayers.clear()
+		self.nightActionIDList.clear()
+		# プレイヤーの対象情報をリセット．
+		for plr in self.livingIDList:
+			self.playerDict[plr].reset()
+		self.killTargetList.clear()
+
 		# 返り値とするリスト．夜の行動があるプレイヤーの「ID」と，
 		# そのプレイヤーに送信する「メッセージ」，その行動の対象となるプレイヤーの「IDのリスト」．
 		nightList = []
 		# 生きているプレイヤー全てについて行動があるか確認．
 		for plr in self.livingIDList:
-			message = self.playerList[plr].Role.night_message()
+			message = self.playerDict[plr].Role.night_message()
 			if message is not None:
-				self.nightActionID.append(plr)
+				self.nightActionIDList.append(plr)
 				pindex = self.livingIDList.index(plr)
 				subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:] 
 				nightList.append((plr,message,subList))	
 		return nightList
+
+	# 初日ランダム白占いを行うためのメソッド．狐と狼以外からランダムに一人を選んで白を出す．
+	def random_Fortune(self):
+		rlist = []
+		teller = 0
+		for k,p in zip(playerDict.keys(),playerDict.values()):
+			if p.Role.name == "占い師":
+				teller = k 
+			elif p.Role.human:
+				rlist.append(k)
+			if p.Role.team == "fox":
+				rlist.remove(k)
+		return(teller, random.choice(rlist),"さんは人間でした。")
+
+	# 霊媒師の結果を見るための関数。
+	def check_Medium(self):
+		voted = None
+		message = "昨夜は誰も処刑されませんでした。"
+		for p in self.playerDict.keys():
+			player = self.playerDict[p]
+			if player.Voted:
+				voted = p
+				if player.Role.human:
+					message = "さんは人間でした。"
+				else:
+					message = "さんは人狼でした。"
+		for m in self.livingIDList:
+			if self.playerDict[m].Role.name == "霊媒師":
+				return (m,voted,message)
+
 	
 	# playerの夜の行動をtargetを対象として行う．
-	def night_Action(self, player, target):
-		if not player in self.nightActionID:
+	def vote_nightAction(self, player, target):
+		if not player in self.nightActionIDList:
 			return None
-		self.nightActionID.remove(player)
-		RN = self.playerList[player].Role.name
+		self.nightActionIDList.remove(player)
+		RN = self.playerDict[player].Role.name
 		if RN == "占い師":
-			self.playerList[player].FortuneTarget = True
-			if self.playerList[target].Role.human:
+			self.playerDict[player].FortuneTarget = True
+			if self.playerDict[target].Role.human:
 				return "さんを占った結果は人間でした！"
 			else:
 				return "さんを占った結果は人狼でした！"
 		elif RN == "騎士":
-			self.playerList[target].Guard = True
+			self.playerDict[target].Guard = True
 			return "さんを護衛します！"
 		elif RN == "人狼":
-			self.killTarget.append(target)
+			self.killTargetList.append(target)
 			return "さんを殺害対象に選択しました。"
 
 	# 朝を迎える時の関数．
 	# 夜のアクションの結果死亡したプレイヤーのIDのリストを返す．
 	def welcome_Morning(self):
-		# 返り値とするリスト．死亡した人のIDを保存する．
-		death = []
 		# 夜のアクションが終了しているのか確認．
 		if not len(nightActionID) == 0:
 			return "夜のアクションが終了していません。\n夜のアクションを終了させてください。" 
+		# 返り値とするリスト．死亡した人のIDを保存する．
+		death = []
+		# 夜のフェイズを終了させる
+		self.phase = 2
 		# 人狼の殺害対象となったプレイヤーが複数いる場合はランダムに決定．
-		if len(self.killTarget) > 1:
-			t = random.choice(self.killTarget)
-			self.killTarget = [t]
-		tgt = self.killTarget[0]
+		if len(self.killTargetList) > 1:
+			t = random.choice(self.killTargetList)
+			self.killTargetList = [t]
+		tgt = self.killTargetList[0]
 		# 殺害対象となったプレイヤーが殺害可能なプレイヤーなら死亡させる．
-		if not self.playerList[tgt].Guard:
+		if not self.playerDict[tgt].Guard:
 			death.append(tgt)
 			self.Kill(tgt)
 		# プレイヤーの対象情報をリセット．
 		for plr in self.livingIDList:
-			self.playerList[plr].reset()
-		self.killTarget.clear()
+			self.playerDict[plr].reset()
+		self.killTargetList.clear()
 		return death
 
 	# 投票する人と，投票対象のリストを生成して返す．
 	def make_Vote(self):
+		self.phase = 3
+		self.voteList.clear()
+		self.voteNumDict.clear()
 		voteMessageList = []
+		message = "投票先を選んでください。"
 		for plr in self.livingIDList:
 			pindex = self.livingIDList.index(plr)
 			subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:]
-			voteMessageList.append((plr,subList))
-			self.voteNumList[plr] = 0
+			voteMessageList.append((plr,message,subList))
+			self.voteList.append(plr)
+			self.voteNumDict[plr] = 0
 		return voteMessageList
 
 	# 決戦投票用の関数．投票する人と，投票対象のリストを生成して返す．
 	def make_FinishVote(self, sublist):
+		self.voteList.clear()
+		self.voteNumDict.clear()
 		voteMessageList = []
+		message = "決戦投票を行います。投票先を選んでください。"
 		for plr in self.livingIDList:
 			if not plr in sublist:
-				voteMessageList.append((plr,sublist))
+				voteMessageList.append((plr,message,sublist))
+				self.voteList.append(plr)
+				self.voteNumDict[plr] = 0
 		return voteMessageList
 
 	# 投票する．
 	def Voting(self, player, voted):
-		for pln in self.voteNumList:
+		if not player in self.voteList:
+			return "なんで…？"
+		self.voteList.remove(player)
+		for pln in self.voteNumDict:
 			if pln == voted:
-				self.voteNumList[pln] += 1
-				self.voteList.append((player, voted))
-				return
+				self.voteNumDict[pln] += 1
+				self.votedList.append((player, voted))
+				return "さんに投票しました。"
 
 	# 投票結果を返す，最多得票を得たプレイヤーのリストを返す．
 	def vote_Result(self):
-		if len(self.voteList) != len(self.livingIDList):
+		if len(self.votedList) != len(self.livingIDList):
 			return ("投票が完了していません。", [])
 		maxVNum = 0
-		for pln in self.voteNumList:
+		mvList = []
+		for pln in zip(self.voteNumDict.keys(),self.voteNumDict.values()):
 			if pln[1] > maxVNum:
-				self.maxVotePlayers.clear()
+				mvList.clear()
 				maxVNum = pln[1]
-				self.maxVotePlayers.append(pln[0])
+				mvList.append(pln[0])
 			elif pln[1] == maxVNum:
-				self.maxVotePlayers.append(pln[0])
-		self.voteNumList.clear()
-		self.voteList.clear()
-		return ("投票が完了しました。", self.maxVotePlayers)
+				mvList.append(pln[0])
+		self.voteNumDict.clear()
+		self.votedList.clear()
+		if len(mvList) == 0:
+			return("バグ",None,None)
+		elif len(mvList) == 1:
+			self.Kill(mvList[0])
+			self.playerDict[mvList[0]].Voted = True
+			return("投票完了", mvList[0], None)
+		else:
+			fv = make_FinishVote(mvList)
+			return ("決戦投票", None, fv)
