@@ -10,6 +10,15 @@
 		"Bakery":7
 	},
 
+	"1":{
+		"Villager":1
+	},
+
+	"3":{
+		"Villager":2,
+		"Werewolf":1
+	},
+
 	"8":{
 		"Villager": 3,
 		"Werewolf": 2,

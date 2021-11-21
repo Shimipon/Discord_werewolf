@@ -9,7 +9,7 @@ class Role:
 		# 日本語名
 		self.name = "役職"
 	# 夜の行動がある場合はメッセージを返す．
-	def night_message(self):
+	def night_message(self, day):
 		return None
 	# 狼に殺されない役職の場合はTrueにする．
 	def StartGuard(self):
@@ -34,7 +34,9 @@ class Werewolf(Role):
 		self.name = "人狼"
 
 	# 殺害対象を選択する．
-	def night_message(self):
+	def night_message(self, day):
+		if day == 0:
+			return None
 		return "殺害対象を選択してください。"
 		
 class FortuneTeller(Role):
@@ -47,7 +49,9 @@ class FortuneTeller(Role):
 		self.name = "占い師"
 
 	# 占い対象を選択する．
-	def night_message(self):
+	def night_message(self, day):
+		if day == 0:
+			return None
 		return "占い対象を選択してください。"
 
 class Medium(Role):
@@ -69,7 +73,9 @@ class Knight(Role):
 		self.name = "騎士"
 
 	# 護衛対象を選択する．
-	def night_message(self):
+	def night_message(self, day):
+		if day == 0:
+			return None
 		return "護衛対象を選択してください。"
 
 class Madmate(Role):
