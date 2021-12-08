@@ -1,5 +1,5 @@
 import random
-
+import json
 class Role:
 	def __init__(self):
 		# 陣営を決める
@@ -35,7 +35,10 @@ class Werewolf(Role):
 
 	# 殺害対象を選択する．
 	def night_message(self, day):
-		if day == 0:
+		GameConfigJson = open("GameConfig.json", "r")
+		GameConfig = json.load(GameConfigJson)
+		GameRule = GameConfig["Game-Rule"]
+		if day == 0 and (not GameRule["First-Bite"]):
 			return None
 		return "殺害対象を選択してください。"
 		
@@ -50,7 +53,10 @@ class FortuneTeller(Role):
 
 	# 占い対象を選択する．
 	def night_message(self, day):
-		if day == 0:
+		GameConfigJson = open("GameConfig.json", "r")
+		GameConfig = json.load(GameConfigJson)
+		GameRule = GameConfig["Game-Rule"]
+		if day == 0 and (not GameRule["First-Fortune"]):
 			return None
 		return "占い対象を選択してください。"
 
@@ -71,10 +77,15 @@ class Knight(Role):
 		self.human = True
 		# 日本語名
 		self.name = "騎士"
+		# 連続ガードを確認するもの
+		self.past = None
 
 	# 護衛対象を選択する．
 	def night_message(self, day):
-		if day == 0:
+		GameConfigJson = open("GameConfig.json", "r")
+		GameConfig = json.load(GameConfigJson)
+		GameRule = GameConfig["Game-Rule"]
+		if day == 0 and (not GameRule["First-Bite"]):
 			return None
 		return "護衛対象を選択してください。"
 

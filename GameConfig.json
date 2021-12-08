@@ -19,6 +19,13 @@
 		"Werewolf":1
 	},
 
+	"6":{
+		"Villager":2,
+		"Knight":1,
+		"FortuneTeller":1,
+		"Werewolf":2
+	},
+
 	"8":{
 		"Villager": 3,
 		"Werewolf": 2,
@@ -53,5 +60,11 @@
 		"Knight": 1,
 		"Madmate": 1,
 		"Fox": 1
+	},
+	"Game-Rule":{
+		"First-Fortune":true,
+		"Random-Fortune":false,
+		"First-Bite":false,
+		"Same-Guard":false
 	}
 }

@@ -21,6 +21,22 @@ class Player:
 		self.Guard = role.StartGuard()
 		# 投票に使うアルファベット．
 		self.VoteID = voteID
+
+	# 夜のアクションのメッセージと能力の対象のリストを返す．
+	def Night_Action(self, myID, IDList, day):
+		mes = self.Role.night_message(day)
+		if mes is None:
+			return None, None
+		GameConfigJson = open("GameConfig.json","r")
+		GameConfig = json.load(GameConfigJson)
+		GameRule = GameConfig["Game-Rule"]
+		if myID in IDList:
+			IDList.remove(myID)
+		if self.Role.name == "騎士" and (not GameRule["Same-Guard"]):
+			if self.Role.past in IDList:
+				IDList.remove(self.Role.past)
+		return mes, IDList
+
 	# 生存情報以外の情報をリセットする．
 	def reset(self):
 		self.FortuneTarget = False
@@ -202,12 +218,9 @@ class WerewolfMG:
 		nightList = []
 		# 生きているプレイヤー全てについて行動があるか確認．
 		for plr in self.livingIDList:
-			message = self.playerDict[plr].Role.night_message()
+			message, sublist = self.playerDict[plr].Night_Action(plr, self.livingIDList, self.day)
 			if message is not None:
-				self.nightActionIDList.append(plr)
-				pindex = self.livingIDList.index(plr)
-				subList = self.livingIDList[:pindex] + self.livingIDList[pindex+1:] 
-				nightList.append((plr,message,subList))	
+				nightList.append((plr,message,sublist))	
 		return nightList
 
 	# 初日ランダム白占いを行うためのメソッド．狐と狼以外からランダムに一人を選んで白を出す．
@@ -253,6 +266,7 @@ class WerewolfMG:
 			else:
 				return "さんを占った結果は人狼でした！"
 		elif RN == "騎士":
+			self.playerDict[player].Role.past = target
 			self.playerDict[target].Guard = True
 			return "さんを護衛します！"
 		elif RN == "人狼":

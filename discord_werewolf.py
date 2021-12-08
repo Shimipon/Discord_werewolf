@@ -9,12 +9,14 @@ import re
 WMG = WerewolfMG.WerewolfMG()
 ConfigJson = open("ServerConfig.json", "r")
 Config = json.load(ConfigJson)
+GameConfigJson = open("GameConfig.json","r")
+GameConfig = json.load(GameConfigJson)
+GameRule = GameConfig["Game-Rule"]
 intent = discord.Intents.default()
 intent.members = True
 client = discord.Client(intents = intent)
 # wolfChannel = client.get_channel(Config["wolfTextChannel"])
 # deadChannel = client.get_channel(Config["deadTextChannel"])
-
 
 # ユーザー"to"にメッセージ内容"S"のメッセージを送信する
 async def DirectMessage(to, S):
@@ -104,9 +106,9 @@ async def If_BotReaction(reaction):
 	async for u in reaction.users():
 		if u == client.user:
 			return True
-			print("TRUE")
+			# print("TRUE")
 	return False
-	print("False!")
+	# print("False!")
 
 # ゲームをスタートするための関数．
 async def Start_Game(rlist = None):
@@ -284,19 +286,19 @@ async def Go_Game():
 		await pc.send(str(WMG.day) + "日目の夜がやってきました。夜のアクションがある方にはアクションのためのダイレクトメッセージを送信します。")
 		await PermitDead_Deadchat()
 		if WMG.day == 0:
-			WMG.phase = 1
-			tel, tgt, mes1 = WMG.random_Fortune()
-			if client.get_user(tel) is not None:
-				await DirectMessage(client.get_user(tel), get_DisplayName(tgt) + mes1)
+			if GameRule["Random-Fortune"]:
+				tel, tgt, mes1 = WMG.random_Fortune()
+				if client.get_user(tel) is not None:
+					await DirectMessage(client.get_user(tel), get_DisplayName(tgt) + mes1)
 			for w in WMG.WolfIDList:
 				await DirectMessage(client.get_user(w), "夜の間だけは人狼テキストチャットに書き込みができます！昼になると読むことしかできません！")
 		else:
-			await All_Private_Vote(WMG.make_NightList())
 			med, vtd, mes = WMG.check_Medium()
 			if vtd is None:
 				await DirectMessage(client.get_user(med), mes)
 			else:
 				await DirectMessage(client.get_user(med), get_DisplayName(vtd) + mes)
+		await All_Private_Vote(WMG.make_NightList())
 		ok = await pc.send("みなさんの目が覚めたころに🆗を押してください。")
 		await ok.add_reaction("🆗")
 
@@ -361,6 +363,8 @@ async def on_message(message):
 	if client.user.mentioned_in(message):
 		print("I was mentioned")
 		await message.channel.send("人狼botだよ！よろしく！！")
+		
+	# メンバー設定を始めるためのコマンド．
 	if message.content == ".dw member":
 		print("参加者確認and設定")
 		await send_Member(message.channel)
@@ -378,7 +382,7 @@ async def on_message(message):
 			WMG.Set_IDList(get_IDList(vc.members))
 			await send_Member(message.channel)
 
-	# そのチャンネルのメッセージを100件削除する．
+	# そのチャンネルのメッセージを上限100件削除する．
 	if message.content == ".dw purge":
 		print("メッセージ履歴の削除")
 		deleted = await message.channel.purge(limit = 100)
